@@ -1,0 +1,6 @@
+{
+  "name": "CAPILAR SMART IA",
+  "description": "Da avaliação à rotina de cuidados: uma experiência capilar personalizada. Protótipo para bancada de salão e Projeto Integrador SENAC.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
