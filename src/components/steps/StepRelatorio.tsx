@@ -574,6 +574,50 @@ ${report.nextReassessment.goal} (${report.nextReassessment.estimatedTimeframe})`
           </section>
         )}
 
+        {/* VISAGISMO E LEITURA FACIAL (se registrado na avaliação) */}
+        {evaluation.visual?.facialAnalysis && (
+          <section className="p-4 sm:p-5 rounded-xl bg-[#060913] border border-purple-500/30 space-y-3.5 print-highlight">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-2">
+                <span className="w-5 h-5 rounded bg-purple-500/20 text-purple-300 flex items-center justify-center text-xs font-black">
+                  ✦
+                </span>
+                Visagismo & Análise Facial Computacional
+              </h3>
+              <span className="text-[10px] font-semibold text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+                Formato: {evaluation.visual.facialAnalysis.faceShape}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              <div className="p-3 rounded-lg bg-[#0c101d] border border-[#1b2338] space-y-1 md:col-span-2">
+                <span className="text-purple-300 text-[11px] font-semibold block">Harmonização e Corte:</span>
+                <p className="text-slate-200">{evaluation.visual.facialAnalysis.visagismRecommendation}</p>
+
+                <span className="text-emerald-300 text-[11px] font-semibold block pt-2">Protocolo Cosmético Sugerido:</span>
+                <p className="text-slate-200">{evaluation.visual.facialAnalysis.cosmeticProtocolRecommendation}</p>
+
+                <p className="text-slate-400 text-[11px] italic pt-1">
+                  "{evaluation.visual.facialAnalysis.summary}"
+                </p>
+              </div>
+
+              {evaluation.visual.facialAnalysisImage && (
+                <div className="flex flex-col items-center justify-center p-2 rounded-xl bg-[#0c101d] border border-[#1f283d]">
+                  <img
+                    src={evaluation.visual.facialAnalysisImage}
+                    alt="Foto Facial da Cliente"
+                    className="w-full max-h-36 object-cover rounded-lg border border-[#2b354d]"
+                  />
+                  <span className="text-[10px] text-slate-400 mt-1">
+                    Registro de Visagismo
+                  </span>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* 6. ÍNDICE E NECESSIDADES (PRIORIDADE / NECESSIDADE - NÃO DANO) */}
         <section className="p-4 sm:p-5 rounded-xl bg-[#060913] border border-[#182136] space-y-4 print-highlight">
           <div className="flex items-center justify-between">

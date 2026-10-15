@@ -369,6 +369,38 @@ export const StepResultado: React.FC<StepResultadoProps> = ({
         </div>
       )}
 
+      {/* Card de Visagismo & Leitura Facial IA (se realizada na bancada) */}
+      {visual.facialAnalysis && (
+        <div className="bg-[#0c101d] rounded-2xl border border-purple-500/40 p-6 space-y-4 shadow-xl animate-fadeIn">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Smile className="w-5 h-5 text-purple-400" />
+              <h4 className="text-sm font-bold text-white uppercase tracking-wider">
+                Visagismo & Leitura Facial Computacional
+              </h4>
+            </div>
+            <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30 self-start sm:self-auto">
+              Formato Facial: {visual.facialAnalysis.faceShape}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div className="p-3.5 rounded-xl bg-[#060913] border border-[#1b2338] space-y-1">
+              <strong className="text-purple-300 block font-semibold">Harmonização e Corte Sugerido:</strong>
+              <p className="text-slate-300 leading-relaxed">{visual.facialAnalysis.visagismRecommendation}</p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-[#060913] border border-[#1b2338] space-y-1">
+              <strong className="text-emerald-300 block font-semibold">Protocolo Cosmético Prioritário:</strong>
+              <p className="text-slate-300 leading-relaxed">{visual.facialAnalysis.cosmeticProtocolRecommendation}</p>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20 text-xs text-slate-300 italic">
+            "{visual.facialAnalysis.summary}"
+          </div>
+        </div>
+      )}
+
       {/* Card 4: Parecer Inteligente (Assistente Capilar Smart IA) */}
       <div className="bg-gradient-to-br from-[#12182b] via-[#0d1222] to-[#070a14] rounded-2xl border border-[#f72585]/40 p-6 sm:p-7 shadow-xl space-y-4 relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

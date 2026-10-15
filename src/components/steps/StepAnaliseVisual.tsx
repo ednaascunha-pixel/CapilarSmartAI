@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { Eye, Layers, Sparkles, Activity, ShieldCheck, ArrowRight, ArrowLeft, Check, HelpCircle } from 'lucide-react';
 import { VisualAnalysisData, CurvatureType, StrandThickness, HairDensity, ElasticityTest, PorosityTest, EndsState } from '../../types';
 import { CURVATURE_CATALOG } from '../../data/hairKnowledge';
+import { FacialHairScanner } from '../FacialHairScanner';
 
 interface StepAnaliseVisualProps {
   data: VisualAnalysisData;
+  clientName?: string;
+  hairGoal?: string;
   onChange: (data: VisualAnalysisData) => void;
   onBack: () => void;
   onContinue: () => void;
@@ -12,6 +15,8 @@ interface StepAnaliseVisualProps {
 
 export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
   data,
+  clientName,
+  hairGoal,
   onChange,
   onBack,
   onContinue,
@@ -79,6 +84,43 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
           </div>
         )}
       </div>
+
+      {/* Leitura Facial e Visagismo por IA (Visão Computacional) */}
+      <FacialHairScanner
+        clientName={clientName}
+        hairGoal={hairGoal}
+        currentCurvature={data.curvature}
+        existingAnalysis={data.facialAnalysis}
+        existingImage={data.facialAnalysisImage}
+        onAnalysisComplete={(result, imageBase64) => {
+          onChange({
+            ...data,
+            facialAnalysis: result,
+            facialAnalysisImage: imageBase64,
+          });
+        }}
+        onApplyCurvature={(curv) => {
+          onChange({
+            ...data,
+            curvature: curv,
+          });
+        }}
+        onAppendNotes={(text) => {
+          const currentObs = data.professionalObservations || '';
+          const newObs = currentObs ? `${currentObs}\n\n${text}` : text;
+          onChange({
+            ...data,
+            professionalObservations: newObs,
+          });
+        }}
+        onClearAnalysis={() => {
+          onChange({
+            ...data,
+            facialAnalysis: undefined,
+            facialAnalysisImage: undefined,
+          });
+        }}
+      />
 
       {/* 1. Curvatura do Fio (1A a 4C) */}
       <div className="bg-[#0c101d] rounded-2xl border border-[#1a2236] p-6 space-y-4">

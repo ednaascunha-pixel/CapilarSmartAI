@@ -59,6 +59,19 @@ export interface AnamneseData {
   waterIntakeLiters: string;
 }
 
+export interface FacialHairAnalysisResult {
+  faceShape: string;
+  facialFeatures: string;
+  hairCurvatureDetected?: CurvatureType;
+  hairTextureDetected?: string;
+  apparentHairCondition: string;
+  visagismRecommendation: string;
+  cosmeticProtocolRecommendation: string;
+  summary: string;
+  analyzedAt: string;
+  source: 'ai' | 'expert-vision';
+}
+
 export interface VisualAnalysisData {
   curvature: CurvatureType;
   thickness: StrandThickness;
@@ -73,6 +86,8 @@ export interface VisualAnalysisData {
   rootToTipDifference?: 'UNIFORME' | 'RAIZ_OLEOSA_PONTAS_SECAS' | 'COMPRIMENTO_DANIFICADO';
   professionalObservations?: string; // Observações da bancada
   microscope?: DigitalMicroscopeData; // Dados do aparelho / microscópio
+  facialAnalysis?: FacialHairAnalysisResult; // Leitura facial e visagismo computacional
+  facialAnalysisImage?: string; // Foto otimizada utilizada na leitura
 }
 
 export type CapillaryNeedKey =

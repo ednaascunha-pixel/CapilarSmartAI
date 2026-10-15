@@ -862,6 +862,8 @@ export default function App() {
         {currentStep === 'ANALISE_VISUAL' && (
           <StepAnaliseVisual
             data={visual}
+            clientName={currentClient?.name}
+            hairGoal={currentClient?.hairGoal}
             onChange={(newV) => {
               setVisual(newV);
               updateCalculations(anamnese, newV, currentClient, evaluations);
