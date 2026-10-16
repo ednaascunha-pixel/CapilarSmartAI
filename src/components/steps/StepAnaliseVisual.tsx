@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { Eye, Layers, Sparkles, Activity, ShieldCheck, ArrowRight, ArrowLeft, Check, HelpCircle } from 'lucide-react';
+import {
+  Eye,
+  Layers,
+  Sparkles,
+  Activity,
+  ShieldCheck,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  HelpCircle,
+  SlidersHorizontal,
+  ChevronDown,
+} from 'lucide-react';
 import { VisualAnalysisData, CurvatureType, StrandThickness, HairDensity, ElasticityTest, PorosityTest, EndsState } from '../../types';
 import { CURVATURE_CATALOG } from '../../data/hairKnowledge';
 import { FacialHairScanner } from '../FacialHairScanner';
@@ -23,25 +35,49 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
 }) => {
   const [selectedCurvatureCategory, setSelectedCurvatureCategory] = useState<'Todos' | 'Lisos' | 'Ondulados' | 'Cacheados' | 'Crespos'>('Todos');
   const [showBenchHelper, setShowBenchHelper] = useState(false);
+  const [showManualOptions, setShowManualOptions] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  const detected = data.facialAnalysis?.detectedAnalysis;
 
   const handleAdvance = () => {
     if (!data.curvature) {
-      setValidationError('Por favor, selecione o padrão de curvatura da cliente.');
+      if (data.facialAnalysis?.detectedAnalysis?.curvature) {
+        const detectedData = data.facialAnalysis.detectedAnalysis;
+        onChange({
+          ...data,
+          curvature: detectedData.curvature,
+          thickness: detectedData.thickness || data.thickness || 'MEDIO',
+          elasticity: detectedData.elasticity || data.elasticity || 'MEDIA',
+          porosity: detectedData.porosity || data.porosity || 'MEDIA',
+          density: detectedData.density || data.density || 'MEDIA',
+          endsState: detectedData.endsState || data.endsState || 'RESSECADAS',
+          tensileResistance: detectedData.tensileResistance || data.tensileResistance || 'MODERADA',
+          touchSensation: detectedData.touchSensation || data.touchSensation || 'ASPERO_RIGIDO',
+          frizzLevel: detectedData.frizzLevel || data.frizzLevel || 'MODERADO',
+        });
+        setValidationError(null);
+        onContinue();
+        return;
+      }
+      setValidationError('Por favor, tire uma foto com a câmera ou carregue uma imagem para a leitura automática da fibra capilar por IA.');
       return;
     }
-    if (!data.thickness) {
-      setValidationError('Por favor, defina a espessura da haste capilar (Fina, Média ou Grossa).');
-      return;
-    }
-    if (!data.elasticity) {
-      setValidationError('Por favor, realize e selecione o resultado do teste de tração e elasticidade.');
-      return;
-    }
-    if (!data.porosity) {
-      setValidationError('Por favor, selecione o nível de porosidade ao toque cuticular.');
-      return;
-    }
+
+    // Preenche automaticamente quaisquer campos secundários ausentes para garantir o cálculo perfeito
+    const updatedData: VisualAnalysisData = {
+      ...data,
+      thickness: data.thickness || detected?.thickness || 'MEDIO',
+      elasticity: data.elasticity || detected?.elasticity || 'MEDIA',
+      porosity: data.porosity || detected?.porosity || 'MEDIA',
+      density: data.density || detected?.density || 'MEDIA',
+      endsState: data.endsState || detected?.endsState || 'RESSECADAS',
+      tensileResistance: data.tensileResistance || detected?.tensileResistance || 'MODERADA',
+      touchSensation: data.touchSensation || detected?.touchSensation || 'ASPERO_RIGIDO',
+      frizzLevel: data.frizzLevel || detected?.frizzLevel || 'MODERADO',
+    };
+
+    onChange(updatedData);
     setValidationError(null);
     onContinue();
   };
@@ -85,18 +121,53 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
         )}
       </div>
 
-      {/* Leitura Facial e Visagismo por IA (Visão Computacional) */}
+      {/* Leitura Facial, Visagismo e Análise das 9 Etapas por Machine Learning */}
       <FacialHairScanner
         clientName={clientName}
         hairGoal={hairGoal}
         currentCurvature={data.curvature}
+        currentVisualData={data}
         existingAnalysis={data.facialAnalysis}
         existingImage={data.facialAnalysisImage}
         onAnalysisComplete={(result, imageBase64) => {
+          const detectedData = result.detectedAnalysis;
           onChange({
             ...data,
             facialAnalysis: result,
             facialAnalysisImage: imageBase64,
+            ...(detectedData
+              ? {
+                  curvature: detectedData.curvature || data.curvature,
+                  thickness: detectedData.thickness || data.thickness,
+                  density: detectedData.density || data.density,
+                  elasticity: detectedData.elasticity || data.elasticity,
+                  porosity: detectedData.porosity || data.porosity,
+                  endsState: detectedData.endsState || data.endsState,
+                  tensileResistance: detectedData.tensileResistance || data.tensileResistance,
+                  touchSensation: detectedData.touchSensation || data.touchSensation,
+                  frizzLevel: detectedData.frizzLevel || data.frizzLevel,
+                }
+              : {}),
+          });
+        }}
+        onApplyAllDetectedAnalysis={(detectedData) => {
+          onChange({
+            ...data,
+            curvature: detectedData.curvature,
+            thickness: detectedData.thickness,
+            density: detectedData.density,
+            elasticity: detectedData.elasticity,
+            porosity: detectedData.porosity,
+            endsState: detectedData.endsState,
+            tensileResistance: detectedData.tensileResistance,
+            touchSensation: detectedData.touchSensation,
+            frizzLevel: detectedData.frizzLevel,
+          });
+        }}
+        onApplySingleParameter={(key, val) => {
+          onChange({
+            ...data,
+            [key]: val,
           });
         }}
         onApplyCurvature={(curv) => {
@@ -122,12 +193,52 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
         }}
       />
 
-      {/* 1. Curvatura do Fio (1A a 4C) */}
-      <div className="bg-[#0c101d] rounded-2xl border border-[#1a2236] p-6 space-y-4">
+      {/* Botão de Alternância: Opções e Escolhas Manuais de Bancada (Ocultas por Padrão) */}
+      <div className="flex flex-col items-center justify-center pt-2">
+        <button
+          type="button"
+          onClick={() => setShowManualOptions(!showManualOptions)}
+          className={`inline-flex items-center gap-2.5 px-5 py-2.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer shadow-sm ${
+            showManualOptions
+              ? 'bg-[#141c30] border-[#f72585] text-white shadow-[0_0_12px_rgba(247,37,133,0.2)]'
+              : 'bg-[#0c101d] hover:bg-[#13192c] border-[#1f283d] text-slate-400 hover:text-slate-200 hover:border-slate-600'
+          }`}
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5 text-[#f72585]" />
+          <span>
+            {showManualOptions
+              ? 'Ocultar Opções & Seleção Manual de Dados'
+              : 'Opções e Seleção Manual da Bancada (Ocultas) • Clique para exibir'}
+          </span>
+          <ChevronDown
+            className={`w-3.5 h-3.5 transition-transform duration-200 ${
+              showManualOptions ? 'rotate-180 text-[#f72585]' : 'text-slate-400'
+            }`}
+          />
+        </button>
+        {!showManualOptions && data.curvature && (
+          <p className="text-[11px] text-emerald-400 font-medium mt-2 flex items-center gap-1.5 animate-fadeIn">
+            <Check className="w-3.5 h-3.5" /> Curvatura ({data.curvature}) e parâmetros identificados pela IA. Clique abaixo para avançar ao cálculo.
+          </p>
+        )}
+      </div>
+
+      {/* Seção com Escolha dos Dados e Opções da Bancada (Oculta por Padrão) */}
+      {showManualOptions && (
+        <div className="space-y-6 animate-fadeIn border-t border-[#1a2236] pt-6">
+          {/* 1. Curvatura do Fio (1A a 4C) */}
+          <div className="bg-[#0c101d] rounded-2xl border border-[#1a2236] p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <Layers className="w-4 h-4 text-[#f72585]" /> 1. Classificação da Curvatura (Tabela Internacional)
+            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 flex-wrap">
+              <span className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[#f72585]" /> 1. Classificação da Curvatura (Tabela Internacional)
+              </span>
+              {detected?.curvature && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#f72585]/15 border border-[#f72585]/30 text-[#ff66b2] font-semibold flex items-center gap-1 normal-case tracking-normal">
+                  <Sparkles className="w-2.5 h-2.5" /> IA Detectou: {detected.curvature}
+                </span>
+              )}
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">Identifique o padrão de ondulação natural ou predominante.</p>
           </div>
@@ -203,9 +314,16 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
               <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <Activity className="w-4 h-4 text-[#f72585]" /> 2. Teste de Elasticidade
               </h3>
-              <span className="text-[11px] px-2 py-0.5 rounded bg-[#161c30] text-[#ff66b2] border border-[#f72585]/40">
-                Resistência Cortical
-              </span>
+              <div className="flex items-center gap-1.5">
+                {detected?.elasticity && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950/60 text-cyan-300 border border-cyan-800 font-semibold flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5" /> IA: {detected.elasticity === 'SAUDAVEL' ? 'Saudável' : detected.elasticity === 'MEDIA' ? 'Média' : 'Crítico'}
+                  </span>
+                )}
+                <span className="text-[11px] px-2 py-0.5 rounded bg-[#161c30] text-[#ff66b2] border border-[#f72585]/40">
+                  Resistência Cortical
+                </span>
+              </div>
             </div>
             <p className="text-xs text-slate-400 mt-1">
               Resultado do teste de estiramento do fio úmido na bancada.
@@ -268,9 +386,16 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
               <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#f72585]" /> 3. Teste de Porosidade
               </h3>
-              <span className="text-[11px] px-2 py-0.5 rounded bg-[#201026] text-[#ff66b2] border border-[#f72585]/40">
-                Abertura Cuticular
-              </span>
+              <div className="flex items-center gap-1.5">
+                {detected?.porosity && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-950/60 text-amber-300 border border-amber-800 font-semibold flex items-center gap-1">
+                    <Sparkles className="w-2.5 h-2.5" /> IA: {detected.porosity}
+                  </span>
+                )}
+                <span className="text-[11px] px-2 py-0.5 rounded bg-[#201026] text-[#ff66b2] border border-[#f72585]/40">
+                  Abertura Cuticular
+                </span>
+              </div>
             </div>
             <p className="text-xs text-slate-400 mt-1">
               Deslize tátil dos dedos da ponta para a raiz ou teste de retenção.
@@ -327,9 +452,16 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Espessura */}
         <div className="bg-[#0c101d] rounded-2xl border border-[#1a2236] p-4 sm:p-5 space-y-3">
-          <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-            4. Espessura do Fio
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+              4. Espessura do Fio
+            </h3>
+            {detected?.thickness && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-950/60 border border-purple-800 text-purple-300 font-semibold flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5" /> IA: {detected.thickness}
+              </span>
+            )}
+          </div>
           <div className="space-y-2">
             {[
               { id: 'FINO', label: 'Fino / Delicado', desc: 'Frágil a químicas e quebra mecânica' },
@@ -355,9 +487,16 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
 
         {/* Densidade */}
         <div className="bg-[#0c101d] rounded-2xl border border-[#1a2236] p-4 sm:p-5 space-y-3">
-          <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-            5. Densidade Capilar
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+              5. Densidade Capilar
+            </h3>
+            {detected?.density && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-blue-950/60 border border-blue-800 text-blue-300 font-semibold flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5" /> IA: {detected.density}
+              </span>
+            )}
+          </div>
           <div className="space-y-2">
             {[
               { id: 'BAIXA', label: 'Baixa Densidade', desc: 'Couro visível facilmente entre os fios' },
@@ -383,9 +522,16 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
 
         {/* Estado das Pontas */}
         <div className="bg-[#0c101d] rounded-2xl border border-[#1a2236] p-4 sm:p-5 space-y-3 sm:col-span-2 lg:col-span-1">
-          <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-            6. Estado das Pontas
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+              6. Estado das Pontas
+            </h3>
+            {detected?.endsState && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-rose-950/60 border border-rose-800 text-rose-300 font-semibold flex items-center gap-1">
+                <Sparkles className="w-2.5 h-2.5" /> IA: {detected.endsState === 'DUPLAS' ? 'Duplas' : detected.endsState === 'INTEGRAS' ? 'Íntegras' : 'Secas'}
+              </span>
+            )}
+          </div>
           <div className="space-y-2">
             {[
               { id: 'INTEGRAS', label: 'Íntegras / Seladas', desc: 'Pontas unidas e saudáveis' },
@@ -416,9 +562,16 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
         {/* Resistência à Tração Mecânica */}
         <div className="bg-[#0c101d] rounded-2xl border border-[#1a2236] p-4 sm:p-5 space-y-3">
           <div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-              7. Resistência à Tração
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                7. Resistência à Tração
+              </h3>
+              {detected?.tensileResistance && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-800 text-emerald-300 font-semibold flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5" /> IA: {detected.tensileResistance === 'BOA_RESISTENTE' ? 'Boa' : 'Moderada'}
+                </span>
+              )}
+            </div>
             <p className="text-[11px] text-slate-400 mt-0.5">Teste físico de força sob mecha úmida.</p>
           </div>
           <div className="space-y-2">
@@ -447,9 +600,16 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
         {/* Toque e Aspecto da Fibra */}
         <div className="bg-[#0c101d] rounded-2xl border border-[#1a2236] p-4 sm:p-5 space-y-3">
           <div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-              8. Toque e Aspecto
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                8. Toque e Aspecto
+              </h3>
+              {detected?.touchSensation && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-950/60 border border-amber-800 text-amber-300 font-semibold flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5" /> IA
+                </span>
+              )}
+            </div>
             <p className="text-[11px] text-slate-400 mt-0.5">Sensação sensorial ao manusear a mecha.</p>
           </div>
           <div className="space-y-2">
@@ -479,9 +639,16 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
         {/* Nível de Frizz */}
         <div className="bg-[#0c101d] rounded-2xl border border-[#1a2236] p-4 sm:p-5 space-y-3">
           <div>
-            <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-              9. Frizz & Alinhamento
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                9. Frizz & Alinhamento
+              </h3>
+              {detected?.frizzLevel && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-950/60 border border-purple-800 text-purple-300 font-semibold flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5" /> IA: {detected.frizzLevel}
+                </span>
+              )}
+            </div>
             <p className="text-[11px] text-slate-400 mt-0.5">Comportamento cuticular frente ao ambiente.</p>
           </div>
           <div className="space-y-2">
@@ -727,6 +894,8 @@ export const StepAnaliseVisual: React.FC<StepAnaliseVisualProps> = ({
           className="w-full p-3 rounded-xl bg-[#060913] border border-[#1b2338] text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#f72585] resize-none"
         />
       </div>
+    </div>
+  )}
 
       {/* Validation Error Banner */}
       {validationError && (

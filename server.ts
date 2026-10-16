@@ -184,6 +184,27 @@ app.post("/api/ai-hair-face-analysis", async (req, res) => {
     cleanBase64 = match[2];
   }
 
+  const defaultDetectedAnalysis = {
+    curvature: "2B" as const,
+    curvatureReason: "Padrão de ondas abertas em formato de S com raiz mais lisa e curvatura acentuada no meio às pontas.",
+    elasticity: "MEDIA" as const,
+    elasticityReason: "Fibras com ligeira perda de memória elástica decorrente de ressecamento no comprimento.",
+    porosity: "ALTA" as const,
+    porosityReason: "Superfície fosca com reflexão difusa de luz, sugerindo cutículas entreabertas e perda de selagem.",
+    thickness: "MEDIO" as const,
+    thicknessReason: "Calibre médio equilibrado, com densidade estrutural preservada.",
+    density: "MEDIA" as const,
+    densityReason: "Distribuição capilar harmônica com boa densidade e cobertura equilibrada do couro cabeludo.",
+    endsState: "DUPLAS" as const,
+    endsStateReason: "Presença de pontas secas com bifurcações nas extremidades das mechas.",
+    tensileResistance: "MODERADA" as const,
+    tensileResistanceReason: "Haste com resistência moderada, demandando cautela contra tração mecânica excessiva.",
+    touchSensation: "ASPERO_RIGIDO" as const,
+    touchSensationReason: "Toque áspero e opaco decorrente da perda lipídica e hídrica.",
+    frizzLevel: "MODERADO" as const,
+    frizzLevelReason: "Fios dispersos no topo e contorno, acentuados pela umidade relativa.",
+  };
+
   const ai = getGenAI();
   if (!ai) {
     // Calibrated expert vision fallback when GEMINI_API_KEY is not configured
@@ -197,6 +218,7 @@ app.post("/api/ai-hair-face-analysis", async (req, res) => {
       visagismRecommendation: "Corte em camadas suaves e desconectadas para conferir balanço e movimento natural, emoldurando as maçãs do rosto sem achatar o volume superior.",
       cosmeticProtocolRecommendation: "Nutrição Lipídica com acidificação suave (pH 3.5) para selar as cutículas, acentuar a curvatura ondulada e controlar o frizz.",
       summary: `Análise facial para ${clientName || "a cliente"}: Formato oval harmônico que permite versatilidade em cortes médios e camadas fluidas. Curvatura detectada como 2B, indicada para protocolo lipídico e selagem protetora.`,
+      detectedAnalysis: defaultDetectedAnalysis,
       analyzedAt: new Date().toISOString(),
     });
   }
@@ -209,33 +231,61 @@ app.post("/api/ai-hair-face-analysis", async (req, res) => {
       },
     };
 
-    const prompt = `Você é uma especialista de renome em Visagismo Capilar e Tricologia Cosmética de Salão atuando no aplicativo "CAPILAR SMART IA".
+    const prompt = `Você é uma especialista de renome em Visagismo Capilar e Tricologia Cosmética de Salão atuando no aplicativo "CAPILAR SMART IA" (Projeto Integrador SENAC).
 Analise a imagem da cliente fornecida ${clientName ? `(Cliente: ${clientName})` : ""}${hairGoal ? ` com o objetivo capilar: "${hairGoal}"` : ""}.
 
-DIRETRIZES ESTITAS:
+DIRETRIZES ESTRITAS:
 - NÃO forneça diagnósticos médicos, clínicos ou dermatológicos de patologias (sem termos de doenças ou prescrições médicas).
-- Concentre-se estritamente na harmonia facial estética (visagismo) e nas características cosméticas visíveis da haste capilar (fibra do cabelo).
+- Concentre-se estritamente na harmonia facial estética (visagismo) e nas características cosmetológicas da haste capilar observáveis na imagem.
 
-Identifique e estruture os seguintes campos:
-1. "faceShape": Formato facial predominante (ex: "Oval", "Redondo", "Quadrado", "Coração", "Diamante", "Alongado" ou "Triangular").
-2. "facialFeatures": Análise técnica dos terços e linhas do rosto (testa, maçãs, queixo, equilíbrio dos traços).
-3. "hairCurvatureDetected": Padrão de curvatura mais próximo visível na foto. Escolha EXATAMENTE um entre: "1A", "1B", "1C", "2A", "2B", "2C", "3A", "3B", "3C", "4A", "4B", "4C".
-4. "hairTextureDetected": Espessura/textura aparente dos fios (ex: "Fino", "Médio", "Encorpado/Grossa").
-5. "apparentHairCondition": Descrição objetiva da condição visível dos fios (nível aparente de brilho, opacidade, frizz, definição das mechas ou alinhamento).
-6. "visagismRecommendation": Recomendação prática de visagismo profissional para o corte, franja, caimento e harmonização com o formato do rosto.
-7. "cosmeticProtocolRecommendation": Tratamento cosmético de salão prioritário sugerido (ex: Nutrição Lipídica, Hidratação Profunda, Reconstrução com Aminoácidos ou Selagem Ácida).
-8. "summary": Parecer técnico resumido em 2 a 3 frases claras e acolhedoras para a profissional compartilhar com a cliente.
+Avalie com rigor técnico e preencha TODAS as 9 etapas da análise capilar segundo a Tabela Internacional e protocolos de bancada:
+1. Curvatura da Fibra (1A a 4C): Escolha EXATAMENTE um entre: "1A", "1B", "1C", "2A", "2B", "2C", "3A", "3B", "3C", "4A", "4B", "4C".
+2. Teste de Elasticidade: Escolha EXATAMENTE um entre: "SAUDAVEL", "MEDIA", "BAIXA_EMBORRACHADO".
+3. Teste de Porosidade: Escolha EXATAMENTE um entre: "BAIXA", "MEDIA", "ALTA".
+4. Espessura do Fio: Escolha EXATAMENTE um entre: "FINO", "MEDIO", "GROSSO".
+5. Densidade Capilar: Escolha EXATAMENTE um entre: "BAIXA", "MEDIA", "ALTA".
+6. Estado das Pontas: Escolha EXATAMENTE um entre: "INTEGRAS", "RESSECADAS", "DUPLAS", "MULTIPLAS_ESFARELADAS".
+7. Resistência à Tração: Escolha EXATAMENTE um entre: "BOA_RESISTENTE", "MODERADA", "FRAGIL_QUEBRADICO".
+8. Toque e Aspecto: Escolha EXATAMENTE um entre: "MACIO_SEDOSO", "ASPERO_RIGIDO", "RESSECADO_OPOCO", "FRAGIL_QUEBRADICO".
+9. Frizz & Alinhamento: Escolha EXATAMENTE um entre: "LEVE", "MODERADO", "INTENSO".
 
-Retorne EXCLUSIVAMENTE um objeto JSON válido com estas chaves exatas:
+Preencha também a leitura de visagismo facial:
+- "faceShape": Formato facial predominante ("Oval", "Redondo", "Quadrado", "Coração", "Diamante", "Alongado" ou "Triangular").
+- "facialFeatures": Análise técnica dos terços e linhas do rosto.
+- "visagismRecommendation": Recomendação de corte e franja para o formato do rosto.
+- "cosmeticProtocolRecommendation": Tratamento de salão prioritário sugerido.
+- "summary": Parecer técnico resumido em 2 frases para a profissional.
+
+Retorne EXCLUSIVAMENTE um objeto JSON válido com a seguinte estrutura:
 {
   "faceShape": "...",
   "facialFeatures": "...",
-  "hairCurvatureDetected": "...",
-  "hairTextureDetected": "...",
+  "hairCurvatureDetected": "2B",
+  "hairTextureDetected": "Médio",
   "apparentHairCondition": "...",
   "visagismRecommendation": "...",
   "cosmeticProtocolRecommendation": "...",
-  "summary": "..."
+  "summary": "...",
+  "detectedAnalysis": {
+    "curvature": "2B",
+    "curvatureReason": "justificativa visual técnica curta",
+    "elasticity": "MEDIA",
+    "elasticityReason": "justificativa visual técnica curta",
+    "porosity": "ALTA",
+    "porosityReason": "justificativa visual técnica curta",
+    "thickness": "MEDIO",
+    "thicknessReason": "justificativa visual técnica curta",
+    "density": "MEDIA",
+    "densityReason": "justificativa visual técnica curta",
+    "endsState": "DUPLAS",
+    "endsStateReason": "justificativa visual técnica curta",
+    "tensileResistance": "MODERADA",
+    "tensileResistanceReason": "justificativa visual técnica curta",
+    "touchSensation": "ASPERO_RIGIDO",
+    "touchSensationReason": "justificativa visual técnica curta",
+    "frizzLevel": "MODERADO",
+    "frizzLevelReason": "justificativa visual técnica curta"
+  }
 }`;
 
     const candidateModels = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
@@ -276,9 +326,34 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido com estas chaves exatas:
     const text = response.text || "{}";
     const parsed = JSON.parse(text);
 
+    // Normalize and ensure all 9 fields exist
+    const rawAnalysis = parsed.detectedAnalysis || {};
+    const detectedAnalysis = {
+      curvature: rawAnalysis.curvature || parsed.hairCurvatureDetected || defaultDetectedAnalysis.curvature,
+      curvatureReason: rawAnalysis.curvatureReason || "Padrão de curvatura visual identificado na imagem.",
+      elasticity: rawAnalysis.elasticity || defaultDetectedAnalysis.elasticity,
+      elasticityReason: rawAnalysis.elasticityReason || "Avaliação visual da memória e flexibilidade aparente da haste.",
+      porosity: rawAnalysis.porosity || defaultDetectedAnalysis.porosity,
+      porosityReason: rawAnalysis.porosityReason || "Nível de reflexão e dispersão de luz na superfície cuticular.",
+      thickness: rawAnalysis.thickness || defaultDetectedAnalysis.thickness,
+      thicknessReason: rawAnalysis.thicknessReason || "Calibre aparente da fibra em relação ao padrão médio.",
+      density: rawAnalysis.density || defaultDetectedAnalysis.density,
+      densityReason: rawAnalysis.densityReason || "Volume de mechas e cobertura observada do couro cabeludo.",
+      endsState: rawAnalysis.endsState || defaultDetectedAnalysis.endsState,
+      endsStateReason: rawAnalysis.endsStateReason || "Grau de coesão ou desagregação das pontas do cabelo.",
+      tensileResistance: rawAnalysis.tensileResistance || defaultDetectedAnalysis.tensileResistance,
+      tensileResistanceReason: rawAnalysis.tensileResistanceReason || "Índice visual de integridade contra quebra mecânica.",
+      touchSensation: rawAnalysis.touchSensation || defaultDetectedAnalysis.touchSensation,
+      touchSensationReason: rawAnalysis.touchSensationReason || "Textura aparente, brilho e maleabilidade visual.",
+      frizzLevel: rawAnalysis.frizzLevel || defaultDetectedAnalysis.frizzLevel,
+      frizzLevelReason: rawAnalysis.frizzLevelReason || "Frequência de fios desalinhados fora do feixe principal.",
+    };
+
     return res.json({
       source: "ai",
       ...parsed,
+      hairCurvatureDetected: detectedAnalysis.curvature,
+      detectedAnalysis,
       analyzedAt: new Date().toISOString(),
     });
   } catch (error: any) {
@@ -293,6 +368,7 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido com estas chaves exatas:
       visagismRecommendation: "Corte em camadas desconectadas ou repicado frontal suave para valorizar o contorno das maçãs do rosto e conferir balanço natural.",
       cosmeticProtocolRecommendation: "Nutrição Lipídica profunda com selagem ácida (pH 3.5) e protetor térmico sem enxágue.",
       summary: "Estrutura facial harmoniosa que combina com cortes fluidos e camadas leves. Fios com curvatura ondulada pedem reposição lipídica e alinhamento de cutículas.",
+      detectedAnalysis: defaultDetectedAnalysis,
       analyzedAt: new Date().toISOString(),
     });
   }

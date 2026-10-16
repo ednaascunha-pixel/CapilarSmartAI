@@ -59,6 +59,27 @@ export interface AnamneseData {
   waterIntakeLiters: string;
 }
 
+export interface DetectedCapillaryAnalysis {
+  curvature: CurvatureType;
+  curvatureReason?: string;
+  elasticity: ElasticityTest;
+  elasticityReason?: string;
+  porosity: PorosityTest;
+  porosityReason?: string;
+  thickness: StrandThickness;
+  thicknessReason?: string;
+  density: HairDensity;
+  densityReason?: string;
+  endsState: EndsState;
+  endsStateReason?: string;
+  tensileResistance: TensileResistance;
+  tensileResistanceReason?: string;
+  touchSensation: TouchSensation;
+  touchSensationReason?: string;
+  frizzLevel: FrizzLevel;
+  frizzLevelReason?: string;
+}
+
 export interface FacialHairAnalysisResult {
   faceShape: string;
   facialFeatures: string;
@@ -70,6 +91,7 @@ export interface FacialHairAnalysisResult {
   summary: string;
   analyzedAt: string;
   source: 'ai' | 'expert-vision';
+  detectedAnalysis?: DetectedCapillaryAnalysis;
 }
 
 export interface VisualAnalysisData {
